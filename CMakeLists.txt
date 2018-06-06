@@ -172,7 +172,9 @@ messageonce("Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
 
 if(USE_EXTERNAL_TINYXML)
     set(TINYXML_VERSION_MIN "2.6.1")
-    find_package(TinyXML)
+    if(NOT TinyYML_LIBRARIES OR NOT TinyYML_INCLUDE_DIRS OR NOT TinyYML_VERSION)
+        find_package(TinyXML)
+    endif()
     if(TINYXML_FOUND)
         if(TINYXML_VERSION VERSION_EQUAL ${TINYXML_VERSION_MIN} OR
            TINYXML_VERSION VERSION_GREATER ${TINYXML_VERSION_MIN})
@@ -253,19 +255,21 @@ endif(USE_EXTERNAL_TINYXML)
 if(USE_EXTERNAL_YAML)
     # Set minimum yaml version for non-patched sources.
     set(YAML_VERSION_MIN "0.3.0")
-    include(FindPkgConfig)
-    pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
-    find_path(YAML_CPP_INCLUDE_DIR yaml-cpp/yaml.h
-        HINTS  ${PC_YAML_CPP_INCLUDEDIR} ${PC_YAML_CPP_INCLUDE_DIRS} )
-    find_library(YAML_CPP_LIBRARY LIBRARY_NAMES yaml-cpp libyaml-cpp
-        HINTS ${PC_YAML_CPP_LIBRARY_DIRS} )
-    set(YAML_CPP_LIBRARIES ${YAML_CPP_LIBRARY})
-    set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
-    set(YAML_CPP_VERSION ${PC_YAML_CPP_VERSION})
+    if(NOT YAML_CPP_LIBRARIES OR NOT YAML_CPP_INCLUDE_DIRS OR NOT YAML_CPP_VERSION)
+        include(FindPkgConfig)
+        pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
+        find_path(YAML_CPP_INCLUDE_DIR yaml-cpp/yaml.h
+            HINTS  ${PC_YAML_CPP_INCLUDEDIR} ${PC_YAML_CPP_INCLUDE_DIRS} )
+        find_library(YAML_CPP_LIBRARY LIBRARY_NAMES yaml-cpp libyaml-cpp
+            HINTS ${PC_YAML_CPP_LIBRARY_DIRS} )
+        set(YAML_CPP_LIBRARIES ${YAML_CPP_LIBRARY})
+        set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
+        set(YAML_CPP_VERSION ${PC_YAML_CPP_VERSION})
 
-    if(YAML_CPP_VERSION VERSION_LESS ${YAML_VERSION_MIN})
-        message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
-    endif()
+        if(YAML_CPP_VERSION VERSION_LESS ${YAML_VERSION_MIN})
+            message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
+        endif()
+    endif(NOT YAML_CPP_LIBRARIES OR NOT YAML_CPP_INCLUDE_DIRS OR NOT YAML_CPP_VERSION)
 
     find_package_handle_standard_args(yaml-cpp
                                       REQUIRED_VARS YAML_CPP_LIBRARIES YAML_CPP_INCLUDE_DIRS )
@@ -295,6 +299,7 @@ if(USE_EXTERNAL_YAML)
     else(YAML_CPP_FOUND)
         message(FATAL_ERROR "ERROR: System yaml-cpp library was not found. Make sure the library is installed and the pkg-config file exists.")
     endif(YAML_CPP_FOUND)
+
 else(USE_EXTERNAL_YAML) ## provide 2 ways to build this dependency
     set(YAML_CPP_VERSION 0.3.0)
     set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
