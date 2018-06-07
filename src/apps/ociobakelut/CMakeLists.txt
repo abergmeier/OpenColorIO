@@ -1,5 +1,9 @@
 # LCMS
-include(FindPkgConfig FindPackageMessage)
+if(LCMS_INCLUDE_DIRS AND LCMS_LIBRARY_DIRS AND LCMS_LIBRARIES)
+    set(LCMS_FOUND ON)
+else()
+    include(FindPkgConfig FindPackageMessage)
+endif()
 pkg_check_modules(LCMS QUIET lcms2)
 if(LCMS_FOUND AND (LCMS_VERSION VERSION_EQUAL 2.1 OR LCMS_VERSION VERSION_GREATER 2.1))
     FIND_PACKAGE_MESSAGE(LCMS "Found lcms: ${LCMS_LIBRARIES}"
